@@ -4,6 +4,14 @@ import (
 	"fmt"
 
 )
+func validateword(name string) bool {
+	for _, char := range name {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') {
+			return false
+		}
+	}
+	return len(name) > 0
+}
 
 func main(){
 
@@ -20,9 +28,13 @@ func main(){
 
 	if choice == 1 {
 		var word string
+		Enterword:
 		fmt.Print("Enter a word: ")
 		_, err = fmt.Scan(&word)
-
+		if !validateword(word) {
+			fmt.Println("Word should only contain letters")
+			goto Enterword
+		}
 		if PalindromeCheck(word) {
 			fmt.Println("The word is a palindrome")
 		} else {
@@ -30,8 +42,13 @@ func main(){
 		}
 	} else if choice == 2 {
 		var word string
+		Enter1word:
 		fmt.Print("Enter a word: ")
 		_, err = fmt.Scan(&word)
+		if !validateword(word) {
+			fmt.Println("Word should only contain letters")
+			goto Enter1word
+		}
 		wordFrequency := wordFrequencyCount(word)
 		fmt.Println("Word Frequency: ")
 		for key, value := range wordFrequency {
