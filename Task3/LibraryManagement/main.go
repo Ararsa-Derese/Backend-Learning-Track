@@ -5,6 +5,7 @@ import (
 	"library/controllers"
 	"library/models"
 	"library/services"
+	"strings"
 )
 
 func validateword(name string) bool {
@@ -35,27 +36,25 @@ func display(bookcontroller controllers.BookController) {
 		addBook(bookcontroller)
 	case "2":
 		removeBook(bookcontroller)
-	// case "3":
-	// 	borrowBook()
-	// case "4":
-	// 	returnBook()
+	case "3":
+		borrowBook(bookcontroller)
+	case "4":
+		returnBook(bookcontroller)
 	case "5":
 		listAvailableBooks(bookcontroller)
-	// case "6":
-	// 	listBorrowedBooks()
-	// case "7":
-	// 	return 
+	case "6":
+		listBorrowedBooks(bookcontroller)
+	case "7":
+		return 
 	default:
 		fmt.Println("Invalid choice")
 	}
-	if choice == "7"{
-		break
-	}
+	
 	}
 	
 }
 func addBook(bookcontroller controllers.BookController) {
-	var title,author,status string
+	var title,author string
 	fmt.Println("Please Enter the necessary informatin: ")
 	for {
 	fmt.Println("Please Enter title of the book")
@@ -86,60 +85,126 @@ for {
 	}
 	break
 }
-for {
-	fmt.Println("Please Enter status of the book(Available/Borrowed)")
-	_,err := fmt.Scanln(&status)
-	if err!= nil{
-		fmt.Println("Error reading data")
-		continue
 
-	}
-	if !validateword(status){
-		fmt.Println("Please enter a valid status")
-		continue
-	}
-	if status != "Available" && status != "Borrowed"{
-		fmt.Println("Please enter a valid status")
-		continue
-	}
-	break
-}
 book := models.Book{
-	Title: title,
-	Author: author,
-	Status: status,
+	Title: strings.ToLower(title),
+	Author: strings.ToLower(author),
+	Status: "Available",
 }
  bookcontroller.AddBook(book)
 }
 func listAvailableBooks(bookcontroller controllers.BookController) {
-	fmt.Println("List of available books")
-	fmt.Println("|Title|\t|Author|\t|Status|")
 	books := bookcontroller.GetBooks()
 	if len(books) == 0 {
 		fmt.Println("No books available")
 		return
 	}
+	fmt.Println("List of available books")
+	fmt.Println("|Title|\t|Author|\t|Status|")
 	for _, book := range books {
 		if book.Status == "Available" {
-			fmt.Println("|",book.Title,"|", "\t", book.Author, "\t", book.Status)
+			fmt.Println("|",book.Title,"|", "\t", "|", book.Author,"|", "\t", "|",book.Status,"|")
 		}
 	}
 
 }
 func removeBook(bookcontroller controllers.BookController) {
 	var title string
+	for {
 	fmt.Println("Please Enter the title of the book to be removed")
 	_,err := fmt.Scanln(&title)
+	
 	if err!= nil{
 		fmt.Println("Error reading data")
-		return
+		continue
 
 	}
 	if !validateword(title){
 		fmt.Println("Please enter a valid Title")
+		continue
+	}
+	break
+}
+	bookcontroller.RemoveBook(strings.ToLower(title))
+}
+func borrowBook(bookcontroller controllers.BookController) {
+	var title,name string
+	for {
+	fmt.Println("Please Enter the title of the book to be borrowed")
+	_,err := fmt.Scanln(&title)
+	if err!= nil{
+		fmt.Println("Error reading data")
+		continue
+	}
+	if !validateword(title){
+		fmt.Println("Please enter a valid Title")
+		continue
+	}
+	break
+
+	}
+for {
+	fmt.Println("Please Enter borrower name")
+	
+	_,err := fmt.Scanln(&name)
+	if err!= nil{
+		fmt.Println("Error reading data")
+		continue
+	}
+	if !validateword(name){
+		fmt.Println("Please enter a valid name")
+		continue
+	}
+	break
+}
+	bookcontroller.BorrowBook(strings.ToLower(title),strings.ToLower(name))
+}
+func listBorrowedBooks(bookcontroller controllers.BookController) {
+	members := bookcontroller.GetBorrowedBooks()
+	if len(members) == 0 {
+		fmt.Println("No books borrowed")
 		return
 	}
-	bookcontroller.RemoveBook(title)
+	fmt.Println("List of borrowed books")
+	fmt.Println("|Name|\t|Book Title|")
+	fmt.Println(members)
+	for _, member := range members {
+		for _, book := range member.BorrowedBooks {
+			fmt.Println("|",member.Name,"|", "\t", "|", book.Title,"|")
+		}
+	}
+	
+}
+func returnBook(bookcontroller controllers.BookController) {
+	var title ,name string
+	for {
+	fmt.Println("Please Enter the title of the book to be returned")
+	_,err := fmt.Scanln(&title)
+	if err!= nil{
+		fmt.Println("Error reading data")
+		continue
+	}
+	if !validateword(title){
+		fmt.Println("Please enter a valid Title")
+		continue
+	}
+	break
+}
+for {
+	fmt.Println("Please Enter borrower name")
+	_,err := fmt.Scanln(&name)
+	if err!= nil{
+		fmt.Println("Error reading data")
+		continue
+	}
+	if !validateword(name){
+		fmt.Println("Please enter a valid name")
+		continue
+	}
+
+	break
+}
+	bookcontroller.ReturnBook(strings.ToLower(title),strings.ToLower(name))
 }
 func main() {
 	bookservice := services.NewBookService()
