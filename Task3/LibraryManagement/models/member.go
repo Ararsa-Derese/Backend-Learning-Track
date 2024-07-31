@@ -1,7 +1,7 @@
 package models
 
 type Member struct {
-	ID uint
-	Name string
-	BorrowedBooks []Book
+    ID            int
+    Name          string
+    BorrowedBooks []Book
 }

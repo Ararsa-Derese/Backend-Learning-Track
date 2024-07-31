@@ -1,20 +1,59 @@
 # Library Management System Documentation
 
 ## Overview
-This document provides an overview and documentation for the Library Management System developed as part of Task3. The system is designed to manage books and members within a library, facilitating operations such as book lending, returns, and member registration.
+This is a simple console-based library management system implemented in Go. It demonstrates the use of structs, interfaces, and other Go functionalities such as methods, slices, and maps.
 
-## System Architecture
-The Library Management System is structured into several key components:
+## Features
+- Add a new book
+- Remove an existing book
+- Borrow a book
+- Return a book
+- List all available books
+- List all borrowed books by a member
 
-- **Controllers**: Handle incoming HTTP requests and respond with the appropriate actions to perform.
-- **Models**: Represent the data structures used within the system, including `Book` and `Member`.
-- **Services**: Contain the business logic of the application, orchestrating actions between the controllers and models.
+## Folder Structure
+library_management/
+├── main.go
+├── controllers/
+│ └── library_controller.go
+├── models/
+│ └── book.go
+│ └── member.go
+├── services/
+│ └── library_service.go
+├── docs/
+│ └── documentation.md
+└── go.mod
 
-## Setup and Installation
-To set up the Library Management System, ensure you have Go installed on your system. Then, navigate to the `Task3/LibraryManagement` directory and run:
+## Models
+### Book
+Fields:
+- ID (int)
+- Title (string)
+- Author (string)
+- Status (string) // can be "Available" or "Borrowed"
 
-```sh
-go mod tidy
-go build
-./LibraryManagement
-```
+### Member
+Fields:
+- ID (int)
+- Name (string)
+- BorrowedBooks ([]Book) // a slice to hold borrowed books
+
+## Interfaces
+### LibraryManager
+Methods:
+- AddBook(book Book)
+- RemoveBook(bookID int)
+- BorrowBook(bookID int, memberID int) error
+- ReturnBook(bookID int, memberID int) error
+- ListAvailableBooks() []Book
+- ListBorrowedBooks(memberID int) []Book
+
+## Implementation
+The `LibraryManager` interface is implemented in the `Library` struct. The `Library` struct has fields to store all books (using a map with book ID as the key) and members (using a map with member ID as the key).
+
+## Running the Application
+1. Navigate to the `library_management` directory.
+2. Run `go run main.go` to start the console-based application.
+3. Follow the on-screen instructions to interact with the library management system.
+
