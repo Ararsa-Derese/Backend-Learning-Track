@@ -13,17 +13,17 @@ This is a simple console-based library management system implemented in Go. It d
 
 ## Folder Structure
 library_management/
-├── main.go
-├── controllers/
-│ └── library_controller.go
-├── models/
-│ └── book.go
-│ └── member.go
-├── services/
-│ └── library_service.go
-├── docs/
-│ └── documentation.md
-└── go.mod
+- ├── main.go
+- ├── controllers/
+- │ └── library_controller.go
+- ├── models/
+- │ └── book.go
+- │ └── member.go
+- ├── services/
+- │ └── library_service.go
+- ├── docs/
+- │ └── documentation.md
+- └── go.mod
 
 ## Models
 ### Book
