@@ -40,3 +40,12 @@ go mod tidy
 go run delivery/main.go
 ```
 
+### Project Structure
+The project is structured as follows to adhere to Clean Architecture principles:
+
+- db/: Database connection setup
+- delivery/: Entry point of the application and HTTP server setup
+- domain/: Core business logic and models
+- repository/: Data access layer
+- usecase/: Application-specific business rules
+- docs/: API documentation and other documentation resources
