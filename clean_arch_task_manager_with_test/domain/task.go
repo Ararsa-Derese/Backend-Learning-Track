@@ -2,11 +2,9 @@ package domain
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"time"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -14,12 +12,12 @@ const (
 )
 
 type Task struct {
-	ID          string `validate:"-"` // "-" tag means this field is excluded from validation
-	Title       string `validate:"required"`
-	Description string `validate:"required"`
-	DueDate     string `validate:"required"`
-	Status      string `validate:"required"`
-	UserID      string `validate:"required"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Title       string             `json:"title" bson:"title"`
+	Description string             `json:"description" bson:"description"`
+	DueDate     time.Time          `json:"due_date" bson:"due_date"`
+	Status      string             `json:"status" bson:"status"`
+	UserID      primitive.ObjectID `json:"user_id" bson:"user_id"`
 }
 type UpdateTask struct {
 	Title       string `validate:"required"`
@@ -28,53 +26,18 @@ type UpdateTask struct {
 	Status      string `validate:"required"`
 }
 
-func (t *UpdateTask) ValidateUpdate() error {
-	validate := validator.New()
-	err := validate.Struct(t)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-	return nil
-}
-func (t *Task) Validate() error {
-	validate := validator.New()
-	err := validate.Struct(t)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-	return nil
-}
-
-// NewTask creates a new task with a unique ID for a given user.
-func NewTask(userID, title, description, dueDate, status string) *Task {
-	// Generate a new UUID for the task.
-	taskUUID := uuid.New().String()
-
-	// Create a unique ID by combining the user's ID and the task's UUID.
-	uniqueTaskID := fmt.Sprintf("%s-%s", userID, taskUUID)
-
-	return &Task{
-		ID:          uniqueTaskID,
-		Title:       title,
-		Description: description,
-		DueDate:     dueDate,
-		Status:      status,
-		UserID:      userID,
-	}
-}
-
 type TaskRepository interface {
 	AddTask(c context.Context, claims *Claims, task *Task) error
 	GetTasks(c context.Context, claims *Claims) ([]Task, error)
-	GetTask(c context.Context, claims *Claims, id string) (*Task, error)
-	UpdateTask(c context.Context, claims *Claims, id string, task *UpdateTask) error
-	DeleteTask(c context.Context, claims *Claims, id string) error
+	GetTask(c context.Context, claims *Claims, id primitive.ObjectID) (*Task, error)
+	UpdateTask(c context.Context, claims *Claims, id primitive.ObjectID, task *UpdateTask) error
+	DeleteTask(c context.Context, claims *Claims, id primitive.ObjectID) error
 }
 
 type TaskUsecase interface {
 	AddTask(c context.Context, claims *Claims, task *Task) error
 	GetTasks(c context.Context, claims *Claims) ([]Task, error)
-	GetTask(c context.Context,claims *Claims, id string, ) (*Task, error)
-	UpdateTask(c context.Context, claims *Claims, id string, task *UpdateTask) error
-	DeleteTask(c context.Context, claims *Claims, id string) error
+	GetTask(c context.Context, claims *Claims, id primitive.ObjectID) (*Task, error)
+	UpdateTask(c context.Context, claims *Claims, id primitive.ObjectID, task *UpdateTask) error
+	DeleteTask(c context.Context, claims *Claims, id primitive.ObjectID) error
 }

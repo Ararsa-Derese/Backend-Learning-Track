@@ -29,12 +29,6 @@ func (uc *UserController) Register(c *gin.Context) {
 		Password: string(hashedPassword),
 		Role:     user.Role,
 	}
-	adduser = *domain.NewUser(adduser.Username, adduser.Password, adduser.Role)
-	err = adduser.Validate()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 	err = uc.UserUsecase.RegisterUser(&adduser)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Error registering the user"})

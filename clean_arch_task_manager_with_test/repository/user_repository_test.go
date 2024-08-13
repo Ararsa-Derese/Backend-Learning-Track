@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestRegisterUser(t *testing.T) {
@@ -21,7 +22,7 @@ func TestRegisterUser(t *testing.T) {
 	collectionName := domain.CollectionUser
 
 	mockUser := domain.User{
-		ID:       "1",
+		ID:       primitive.NewObjectID(),
 		Username: "User 1",
 		Password: "Password 1",
 		Role:     "user",
@@ -68,7 +69,7 @@ func TestGetUserByID(t *testing.T) {
 		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.User")).Return(nil).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewUserRepository(databaseHelper, collectionName)
-		_, err := tr.GetUserByID("1")
+		_, err := tr.GetUserByID(primitive.NewObjectID())
 		assert.NoError(t, err)
 		collectionHelper.AssertExpectations(t)
 		singleResultHelper.AssertExpectations(t)
@@ -78,7 +79,7 @@ func TestGetUserByID(t *testing.T) {
 		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.User")).Return(errors.New("Unexpected")).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewUserRepository(databaseHelper, collectionName)
-		_, err := tr.GetUserByID( "1")
+		_, err := tr.GetUserByID(primitive.NewObjectID())
 		assert.Error(t, err)
 		collectionHelper.AssertExpectations(t)
 		singleResultHelper.AssertExpectations(t)

@@ -3,15 +3,17 @@ package repository_test
 import (
 	"cleantaskmanager/domain"
 	"cleantaskmanager/mongo/mocks"
+	"cleantaskmanager/repository"
 	"context"
 	"errors"
 	"testing"
-	"go.mongodb.org/mongo-driver/mongo"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
-
-import "cleantaskmanager/repository"
 
 func TestTaskRepository_AddTask(t *testing.T) {
 	var databaseHelper *mocks.Database
@@ -22,12 +24,12 @@ func TestTaskRepository_AddTask(t *testing.T) {
 	collectionName := domain.CollectionTask
 
 	mockTask := domain.Task{
-		ID:          "1",
+		ID:          primitive.NewObjectID(),
 		Title:       "Task 1",
 		Description: "Description 1",
-		DueDate:     "2021-01-01T00:00:00Z",
+		DueDate:     time.Now(),
 		Status:      "pending",
-		UserID:      "1",
+		UserID:      primitive.NewObjectID(),
 	}
 	mockemptyTask := domain.Task{}
 	mockTaskID := "12345"
@@ -72,7 +74,7 @@ func TestTaskRepository_GetTasks(t *testing.T) {
 	cursorHelper = &mocks.Cursor{}
 
 	collectionName := domain.CollectionTask
-	mockClaims := domain.Claims{UserID: "1", Role: "user"}
+	mockClaims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
 
 	t.Run("success", func(t *testing.T) {
 		collectionHelper.On("Find", mock.Anything, mock.Anything).Return(cursorHelper, nil).Once()
@@ -114,13 +116,13 @@ func TestTaskRepository_GetTask(t *testing.T) {
 	collectionHelper = &mocks.Collection{}
 	singleResultHelper = &mocks.SingleResult{}
 	collectionName := domain.CollectionTask
-	mockClaims := domain.Claims{UserID: "1", Role: "user"}
+	mockClaims := domain.Claims{UserID: primitive.NewObjectID(),Role: "user"}
 	t.Run("success", func(t *testing.T) {
-		collectionHelper.On("FindOne", mock.Anything, mock.Anything).Return(singleResultHelper).Once()
+		collectionHelper.On("FindOne", mock.Anything,mock.AnythingOfType("primitive.D")).Return(singleResultHelper).Once()
 		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(nil).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		_, err := tr.GetTask(context.Background(), &mockClaims, "1")
+		_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
 		assert.NoError(t, err)
 		collectionHelper.AssertExpectations(t)
 		singleResultHelper.AssertExpectations(t)
@@ -130,7 +132,7 @@ func TestTaskRepository_GetTask(t *testing.T) {
 		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(errors.New("Unexpected")).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		_, err := tr.GetTask(context.Background(), &mockClaims, "1")
+		_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
 		assert.Error(t, err)
 		collectionHelper.AssertExpectations(t)
 		singleResultHelper.AssertExpectations(t)
@@ -156,7 +158,7 @@ func TestTaskRepository_UpdateTask(t *testing.T) {
 
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
 
-		err := tr.UpdateTask(context.Background(), &mockClaims, "1", &mockTask)
+		err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
 
 		assert.NoError(t, err)
 
@@ -168,7 +170,7 @@ func TestTaskRepository_UpdateTask(t *testing.T) {
 
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
 
-		err := tr.UpdateTask(context.Background(), &mockClaims, "1", &mockTask)
+		err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
 
 		assert.Error(t, err)
 
@@ -188,7 +190,7 @@ func TestTaskRepository_DeleteTask(t *testing.T) {
 		collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id,nil).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		err := tr.DeleteTask(context.Background(), &mockClaims, "1")
+		err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
 		assert.NoError(t, err)
 		collectionHelper.AssertExpectations(t)
 	})
@@ -196,7 +198,7 @@ func TestTaskRepository_DeleteTask(t *testing.T) {
 		collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id,errors.New("Unexpected")).Once()
 		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
 		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		err := tr.DeleteTask(context.Background(), &mockClaims, "1")
+		err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
 		assert.Error(t, err)
 		collectionHelper.AssertExpectations(t)
 	})

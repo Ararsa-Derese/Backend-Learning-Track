@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type userRepository struct {
@@ -26,7 +27,7 @@ func (ur *userRepository) RegisterUser(user *domain.User) error {
 	return err
 }
 
-func (ur *userRepository) GetUserByID(id string) (*domain.User, error) {
+func (ur *userRepository) GetUserByID(id primitive.ObjectID) (*domain.User, error) {
 	collection := ur.database.Collection(ur.collection)
 	var user domain.User
 	filter := bson.D{{Key: "id", Value: id}}

@@ -4,7 +4,9 @@ import (
 	"cleantaskmanager/domain"
 	"cleantaskmanager/mongo"
 	"context"
+
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type taskRepository struct {
@@ -46,7 +48,7 @@ func(tr *taskRepository) GetTasks(c context.Context, claims *domain.Claims) ([]d
 	return tasks, err
 }
 
-func(tr *taskRepository) GetTask(c context.Context, claims *domain.Claims, id string) (*domain.Task, error) {
+func(tr *taskRepository) GetTask(c context.Context, claims *domain.Claims, id primitive.ObjectID) (*domain.Task, error) {
 	collection := tr.database.Collection(tr.collection)
 	filter := bson.D{{Key: "id", Value: id}, {Key: "userid", Value: claims.UserID}}
 	if claims.Role == "admin" {
@@ -57,7 +59,7 @@ func(tr *taskRepository) GetTask(c context.Context, claims *domain.Claims, id st
 	return &result, err
 }
 
-func(tr *taskRepository) UpdateTask(c context.Context, claims *domain.Claims, id string, task *domain.UpdateTask) error {
+func(tr *taskRepository) UpdateTask(c context.Context, claims *domain.Claims, id primitive.ObjectID, task *domain.UpdateTask) error {
 	collection := tr.database.Collection(tr.collection)
 	filter := bson.D{{Key: "id", Value: id}, {Key: "userid", Value: claims.UserID}}
 	if claims.Role == "admin" {
@@ -75,7 +77,7 @@ func(tr *taskRepository) UpdateTask(c context.Context, claims *domain.Claims, id
 	return err
 }
 
-func(tr *taskRepository) DeleteTask(c context.Context, claims *domain.Claims, id string) error {
+func(tr *taskRepository) DeleteTask(c context.Context, claims *domain.Claims, id primitive.ObjectID) error {
 	collection := tr.database.Collection(tr.collection)
 	filter := bson.D{{Key: "id", Value: id}, {Key: "userid", Value: claims.UserID}}
 	if claims.Role == "admin" {

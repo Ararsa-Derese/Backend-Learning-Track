@@ -1,7 +1,10 @@
 package usecase
+
 import (
 	"cleantaskmanager/domain"
 	"cleantaskmanager/infrastructure"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type loginUsecase struct {
@@ -25,7 +28,7 @@ func (lu *loginUsecase) LoginUser(user *domain.User) (string ,error) {
 	
 }
 
-func (lu *loginUsecase) GetUserByID(id string) (*domain.User, error) {
+func (lu *loginUsecase) GetUserByID(id primitive.ObjectID) (*domain.User, error) {
 	return lu.userRepository.GetUserByID(id)
 }
 
