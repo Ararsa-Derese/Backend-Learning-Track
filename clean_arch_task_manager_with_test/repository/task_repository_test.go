@@ -11,16 +11,33 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func TestTaskRepository_AddTask(t *testing.T) {
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
+type TaskRepositorySuite struct {
+	suite.Suite
+	databaseHelper    *mocks.Database
+	collectionHelper  *mocks.Collection
+	cursorHelper      *mocks.Cursor
+	singleResultHelper *mocks.SingleResult
+}
 
+func (suite *TaskRepositorySuite) SetupTest() {
+	suite.databaseHelper = &mocks.Database{}
+	suite.collectionHelper = &mocks.Collection{}
+	suite.cursorHelper = &mocks.Cursor{}
+	suite.singleResultHelper = &mocks.SingleResult{}
+}
+func (suite *TaskRepositorySuite) TearDownSuite() {
+	suite.collectionHelper.AssertExpectations(suite.T())
+	suite.databaseHelper.AssertExpectations(suite.T())
+	suite.cursorHelper.AssertExpectations(suite.T())
+	suite.singleResultHelper.AssertExpectations(suite.T())
+}
+
+func (suite *TaskRepositorySuite) TestAddTask_Success() {
 	collectionName := domain.CollectionTask
 
 	mockTask := domain.Task{
@@ -31,176 +48,176 @@ func TestTaskRepository_AddTask(t *testing.T) {
 		Status:      "pending",
 		UserID:      primitive.NewObjectID(),
 	}
-	mockemptyTask := domain.Task{}
-	mockTaskID := "12345"
 	mockClaims := domain.Claims{}
 
-	t.Run("success", func(t *testing.T) {
+	suite.collectionHelper.On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.Task")).Return("12345", nil).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
 
-		collectionHelper.On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.Task")).Return(mockTaskID, nil).Once()
+	ur := repository.NewTaskRepository(suite.databaseHelper, collectionName)
 
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
+	err := ur.AddTask(context.Background(), &mockClaims, &mockTask)
 
-		ur := repository.NewTaskRepository(databaseHelper, collectionName)
+	assert.NoError(suite.T(), err)
 
-		err := ur.AddTask(context.Background(), &mockClaims, &mockTask)
-
-		assert.NoError(t, err)
-
-		collectionHelper.AssertExpectations(t)
-	})
-	t.Run("error", func(t *testing.T) {
-		collectionHelper.On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.Task")).Return(mockemptyTask, errors.New("Unexpected")).Once()
-
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-
-		ur := repository.NewTaskRepository(databaseHelper, collectionName)
-
-		err := ur.AddTask(context.Background(), &mockClaims, &mockemptyTask)
-
-		assert.Error(t, err)
-
-		collectionHelper.AssertExpectations(t)
-	})
-
+	// suite.collectionHelper.AssertExpectations(suite.T())
 }
-func TestTaskRepository_GetTasks(t *testing.T) {
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
-	var cursorHelper *mocks.Cursor
 
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
-	cursorHelper = &mocks.Cursor{}
+func (suite *TaskRepositorySuite) TestAddTask_Error() {
+	collectionName := domain.CollectionTask
 
+	mockemptyTask := domain.Task{}
+	mockClaims := domain.Claims{}
+
+	suite.collectionHelper.On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.Task")).Return(mockemptyTask, errors.New("Unexpected")).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	ur := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	err := ur.AddTask(context.Background(), &mockClaims, &mockemptyTask)
+
+	assert.Error(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+}
+
+func (suite *TaskRepositorySuite) TestGetTasks_Success() {
 	collectionName := domain.CollectionTask
 	mockClaims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
 
-	t.Run("success", func(t *testing.T) {
-		collectionHelper.On("Find", mock.Anything, mock.Anything).Return(cursorHelper, nil).Once()
-		cursorHelper.On("Close", mock.Anything).Return(nil).Once()
-		cursorHelper.On("Next", mock.Anything).Return(false).Once()
+	suite.collectionHelper.On("Find", mock.Anything, mock.Anything).Return(suite.cursorHelper, nil).Once()
+	suite.cursorHelper.On("Close", mock.Anything).Return(nil).Once()
+	suite.cursorHelper.On("Next", mock.Anything).Return(false).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
 
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
 
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-
-		_, err := tr.GetTasks(context.Background(), &mockClaims)
-
-		assert.NoError(t, err)
-
-		collectionHelper.AssertExpectations(t)
-		cursorHelper.AssertExpectations(t)
-	})
-	t.Run("error", func(t *testing.T) {
-		collectionHelper.On("Find", mock.Anything, mock.Anything).Return(cursorHelper, errors.New("Unexpected")).Once()
-
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-
-		_, err := tr.GetTasks(context.Background(), &mockClaims)
-
-		assert.Error(t, err)
-
-		collectionHelper.AssertExpectations(t)
-		cursorHelper.AssertExpectations(t)
-	})
+	_, err := tr.GetTasks(context.Background(), &mockClaims)
+	suite.NoError(err)
 }
 
-func TestTaskRepository_GetTask(t *testing.T) {
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
-	var singleResultHelper *mocks.SingleResult
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
-	singleResultHelper = &mocks.SingleResult{}
+func (suite *TaskRepositorySuite) TestGetTasks_Error() {
 	collectionName := domain.CollectionTask
-	mockClaims := domain.Claims{UserID: primitive.NewObjectID(),Role: "user"}
-	t.Run("success", func(t *testing.T) {
-		collectionHelper.On("FindOne", mock.Anything,mock.AnythingOfType("primitive.D")).Return(singleResultHelper).Once()
-		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(nil).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
-		assert.NoError(t, err)
-		collectionHelper.AssertExpectations(t)
-		singleResultHelper.AssertExpectations(t)
-	})
-	t.Run("error", func(t *testing.T) {
-		collectionHelper.On("FindOne", mock.Anything, mock.Anything).Return(singleResultHelper).Once()
-		singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(errors.New("Unexpected")).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
-		assert.Error(t, err)
-		collectionHelper.AssertExpectations(t)
-		singleResultHelper.AssertExpectations(t)
-	})
+	mockClaims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
+
+	suite.collectionHelper.On("Find", mock.Anything, mock.Anything).Return(suite.cursorHelper, errors.New("Unexpected")).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	_, err := tr.GetTasks(context.Background(), &mockClaims)
+
+	assert.Error(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+	suite.cursorHelper.AssertExpectations(suite.T())
 }
 
-func TestTaskRepository_UpdateTask(t *testing.T) {
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
+func (suite *TaskRepositorySuite) TestGetTask_Success() {
+	collectionName := domain.CollectionTask
+	mockClaims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
 
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
+	suite.collectionHelper.On("FindOne", mock.Anything, mock.AnythingOfType("primitive.D")).Return(suite.singleResultHelper).Once()
+	suite.singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(nil).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
 
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
+
+	assert.NoError(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+	suite.singleResultHelper.AssertExpectations(suite.T())
+}
+
+func (suite *TaskRepositorySuite) TestGetTask_Error() {
+	collectionName := domain.CollectionTask
+	mockClaims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
+
+	suite.collectionHelper.On("FindOne", mock.Anything, mock.Anything).Return(suite.singleResultHelper).Once()
+	suite.singleResultHelper.On("Decode", mock.AnythingOfType("*domain.Task")).Return(errors.New("Unexpected")).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
+
+	assert.Error(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+	suite.singleResultHelper.AssertExpectations(suite.T())
+}
+
+func (suite *TaskRepositorySuite) TestUpdateTask_Success() {
 	collectionName := domain.CollectionTask
 	mockClaims := domain.Claims{}
 	mockTask := domain.UpdateTask{Title: "Updated Task"}
 	updateresult := &mongo.UpdateResult{}
-	t.Run("success", func(t *testing.T) {
 
-		// updateResult := &mocks.UpdateResult{}
-		collectionHelper.On("UpdateOne", mock.Anything, mock.Anything, mock.Anything).Return(updateresult, nil).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
+	suite.collectionHelper.On("UpdateOne", mock.Anything, mock.Anything, mock.Anything).Return(updateresult, nil).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
 
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
 
-		err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
+	err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
 
-		assert.NoError(t, err)
+	assert.NoError(suite.T(), err)
 
-		collectionHelper.AssertExpectations(t)
-	})
-	t.Run("error", func(t *testing.T) {
-		collectionHelper.On("UpdateOne", mock.Anything, mock.Anything, mock.Anything).Return(updateresult, errors.New("Unexpected")).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-
-		err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
-
-		assert.Error(t, err)
-
-		collectionHelper.AssertExpectations(t)
-	})
+	suite.collectionHelper.AssertExpectations(suite.T())
 }
 
-func TestTaskRepository_DeleteTask(t *testing.T) {
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
+func (suite *TaskRepositorySuite) TestUpdateTask_Error() {
+	collectionName := domain.CollectionTask
+	mockClaims := domain.Claims{}
+	mockTask := domain.UpdateTask{Title: "Updated Task"}
+	updateresult := &mongo.UpdateResult{}
+
+	suite.collectionHelper.On("UpdateOne", mock.Anything, mock.Anything, mock.Anything).Return(updateresult, errors.New("Unexpected")).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
+
+	assert.Error(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+}
+
+func (suite *TaskRepositorySuite) TestDeleteTask_Success() {
 	collectionName := domain.CollectionTask
 	mockClaims := domain.Claims{}
 	var id int64 = 1
-	t.Run("success", func(t *testing.T) {
-		collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id,nil).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
-		assert.NoError(t, err)
-		collectionHelper.AssertExpectations(t)
-	})
-	t.Run("error", func(t *testing.T) {
-		collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id,errors.New("Unexpected")).Once()
-		databaseHelper.On("Collection", collectionName).Return(collectionHelper)
-		tr := repository.NewTaskRepository(databaseHelper, collectionName)
-		err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
-		assert.Error(t, err)
-		collectionHelper.AssertExpectations(t)
-	})
+
+	suite.collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id, nil).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
+
+	assert.NoError(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
 }
 
+func (suite *TaskRepositorySuite) TestDeleteTask_Error() {
+	collectionName := domain.CollectionTask
+	mockClaims := domain.Claims{}
+	var id int64 = 1
+
+	suite.collectionHelper.On("DeleteOne", mock.Anything, mock.Anything).Return(id, errors.New("Unexpected")).Once()
+	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
+
+	tr := repository.NewTaskRepository(suite.databaseHelper, collectionName)
+
+	err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
+
+	assert.Error(suite.T(), err)
+
+	suite.collectionHelper.AssertExpectations(suite.T())
+}
+
+func TestTaskRepositorySuite(t *testing.T) {
+	suite.Run(t, new(TaskRepositorySuite))
+}

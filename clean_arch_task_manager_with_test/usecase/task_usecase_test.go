@@ -10,13 +10,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestTaskUseCase_AddTask(t *testing.T) {
-	mockRepo := new(mocks.TaskRepository)
-	taskUseCase := usecase.NewTaskUsecase(mockRepo)
+type TaskUseCaseSuite struct {
+	suite.Suite
+	mockRepo    *mocks.TaskRepository
+	taskUseCase *usecase.TaskUsecase
+}
 
+func (suite *TaskUseCaseSuite) SetupTest() {
+	suite.mockRepo = new(mocks.TaskRepository)
+	suite.taskUseCase = usecase.NewTaskUsecase(suite.mockRepo).(*usecase.TaskUsecase)
+}
+
+func (suite *TaskUseCaseSuite) TestAddTask() {
 	tasks := domain.Task{
 		ID:          primitive.NewObjectID(),
 		Title:       "Task 1",
@@ -26,41 +35,32 @@ func TestTaskUseCase_AddTask(t *testing.T) {
 		UserID:      primitive.NewObjectID(),
 	}
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
-	mockRepo.On("AddTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("*domain.Task")).Return(nil)
-	err := taskUseCase.AddTask(context.Background(), &claims, &tasks)
-	assert.NoError(t, err)
-	mockRepo.AssertExpectations(t)
+	suite.mockRepo.On("AddTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("*domain.Task")).Return(nil)
+	err := suite.taskUseCase.AddTask(context.Background(), &claims, &tasks)
+	assert.NoError(suite.T(), err)
+	suite.mockRepo.AssertExpectations(suite.T())
 }
 
-func TestTaskUseCase_GetTask(t *testing.T) {
-	mockRepo := new(mocks.TaskRepository)
-	taskUseCase := usecase.NewTaskUsecase(mockRepo)
-
+func (suite *TaskUseCaseSuite) TestGetTask() {
 	taskID := primitive.NewObjectID()
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
-	mockRepo.On("GetTask", mock.Anything,mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("primitive.ObjectID")).Return(&domain.Task{}, nil)
-	task, err := taskUseCase.GetTask(context.Background(),&claims, taskID)
-	assert.NoError(t, err)
-	assert.NotNil(t, task)
-	mockRepo.AssertExpectations(t)
+	suite.mockRepo.On("GetTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("primitive.ObjectID")).Return(&domain.Task{}, nil)
+	task, err := suite.taskUseCase.GetTask(context.Background(), &claims, taskID)
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), task)
+	suite.mockRepo.AssertExpectations(suite.T())
 }
 
-func TestTaskUseCase_GetTasks(t *testing.T) {
-	mockRepo := new(mocks.TaskRepository)
-	taskUseCase := usecase.NewTaskUsecase(mockRepo)
-
+func (suite *TaskUseCaseSuite) TestGetTasks() {
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
-	mockRepo.On("GetTasks", mock.Anything, mock.AnythingOfType("*domain.Claims")).Return([]domain.Task{}, nil)
-	tasks, err := taskUseCase.GetTasks(context.Background(), &claims)
-	assert.NoError(t, err)
-	assert.NotNil(t, tasks)
-	mockRepo.AssertExpectations(t)
+	suite.mockRepo.On("GetTasks", mock.Anything, mock.AnythingOfType("*domain.Claims")).Return([]domain.Task{}, nil)
+	tasks, err := suite.taskUseCase.GetTasks(context.Background(), &claims)
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), tasks)
+	suite.mockRepo.AssertExpectations(suite.T())
 }
 
-func TestTaskUseCase_UpdateTask(t *testing.T) {
-	mockRepo := new(mocks.TaskRepository)
-	taskUseCase := usecase.NewTaskUsecase(mockRepo)
-
+func (suite *TaskUseCaseSuite) TestUpdateTask() {
 	taskID := primitive.NewObjectID()
 	task := domain.UpdateTask{
 		Title:       "Updated Task",
@@ -69,19 +69,21 @@ func TestTaskUseCase_UpdateTask(t *testing.T) {
 		Status:      "pending",
 	}
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
-	mockRepo.On("UpdateTask", mock.Anything, mock.AnythingOfType("*domain.Claims"),mock.AnythingOfType("primitive.ObjectID"),mock.AnythingOfType("*domain.UpdateTask")).Return(nil)
-	err := taskUseCase.UpdateTask(context.Background(),&claims, taskID,&task)
-	assert.NoError(t, err)
-	mockRepo.AssertExpectations(t)
+	suite.mockRepo.On("UpdateTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("primitive.ObjectID"), mock.AnythingOfType("*domain.UpdateTask")).Return(nil)
+	err := suite.taskUseCase.UpdateTask(context.Background(), &claims, taskID, &task)
+	assert.NoError(suite.T(), err)
+	suite.mockRepo.AssertExpectations(suite.T())
 }
 
-func TestTaskUseCase_DeleteTask(t *testing.T) {
-	mockRepo := new(mocks.TaskRepository)
-	taskUseCase := usecase.NewTaskUsecase(mockRepo)
+func (suite *TaskUseCaseSuite) TestDeleteTask() {
 	taskID := primitive.NewObjectID()
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
-	mockRepo.On("DeleteTask", mock.Anything,mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("primitive.ObjectID")).Return(nil)
-	err := taskUseCase.DeleteTask(context.Background(), &claims,taskID)
-	assert.NoError(t, err)
-	mockRepo.AssertExpectations(t)
+	suite.mockRepo.On("DeleteTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("primitive.ObjectID")).Return(nil)
+	err := suite.taskUseCase.DeleteTask(context.Background(), &claims, taskID)
+	assert.NoError(suite.T(), err)
+	suite.mockRepo.AssertExpectations(suite.T())
+}
+
+func TestTaskUseCaseSuite(t *testing.T) {
+	suite.Run(t, new(TaskUseCaseSuite))
 }
