@@ -38,14 +38,35 @@ func (_m *UserUsecase) GetUserByID(id primitive.ObjectID) (*domain.User, error) 
 }
 
 // LoginUser provides a mock function with given fields: user
-func (_m *UserUsecase) LoginUser(user *domain.User) (string, error) {
+func (_m *UserUsecase) LoginUser(user *domain.Login) (string, error) {
 	ret := _m.Called(user)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(*domain.User) string); ok {
+	if rf, ok := ret.Get(0).(func(*domain.Login) string); ok {
 		r0 = rf(user)
 	} else {
 		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*domain.Login) error); ok {
+		r1 = rf(user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegisterUser provides a mock function with given fields: user
+func (_m *UserUsecase) RegisterUser(user *domain.User) (primitive.ObjectID, error) {
+	ret := _m.Called(user)
+
+	var r0 primitive.ObjectID
+	if rf, ok := ret.Get(0).(func(*domain.User) (primitive.ObjectID, error)); ok {
+		r0, _ = rf(user)
+	} else {
+		r0 = ret.Get(0).(primitive.ObjectID)
 	}
 
 	var r1 error
@@ -56,20 +77,6 @@ func (_m *UserUsecase) LoginUser(user *domain.User) (string, error) {
 	}
 
 	return r0, r1
-}
-
-// RegisterUser provides a mock function with given fields: user
-func (_m *UserUsecase) RegisterUser(user *domain.User) error {
-	ret := _m.Called(user)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.User) error); ok {
-		r0 = rf(user)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 type mockConstructorTestingTNewUserUsecase interface {

@@ -36,7 +36,7 @@ func (suite *TaskUseCaseSuite) TestAddTask() {
 	}
 	claims := domain.Claims{UserID: primitive.NewObjectID(), Role: "user"}
 	suite.mockRepo.On("AddTask", mock.Anything, mock.AnythingOfType("*domain.Claims"), mock.AnythingOfType("*domain.Task")).Return(nil)
-	err := suite.taskUseCase.AddTask(context.Background(), &claims, &tasks)
+	_,err := suite.taskUseCase.AddTask(context.Background(), &claims, &tasks)
 	assert.NoError(suite.T(), err)
 	suite.mockRepo.AssertExpectations(suite.T())
 }

@@ -16,17 +16,18 @@ type TaskUsecase struct {
 }
 
 // AddTask provides a mock function with given fields: c, claims, task
-func (_m *TaskUsecase) AddTask(c context.Context, claims *domain.Claims, task *domain.Task) error {
+func (_m *TaskUsecase) AddTask(c context.Context, claims *domain.Claims, task *domain.Task) (primitive.ObjectID, error) {
 	ret := _m.Called(c, claims, task)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *domain.Claims, *domain.Task) error); ok {
-		r0 = rf(c, claims, task)
+	var r0 primitive.ObjectID
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Claims, *domain.Task) (primitive.ObjectID, error)); ok {
+		r0, r1 = rf(c, claims, task)
 	} else {
-		r0 = ret.Error(0)
+		r1 = ret.Error(0)
 	}
 
-	return r0
+	return r0, r1
 }
 
 // DeleteTask provides a mock function with given fields: c, claims, id

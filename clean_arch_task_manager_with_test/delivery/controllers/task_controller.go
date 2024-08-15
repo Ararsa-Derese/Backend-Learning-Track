@@ -20,7 +20,7 @@ func (tc *TaskController) GetTasks(c *gin.Context) {
 	}
 	tasks, err := tc.TaskUsecase.GetTasks(c, claims)
 	if err != nil || len(tasks) == 0 {
-		c.JSON(http.StatusOK, gin.H{"Message": "No tasks found"})
+		c.JSON(http.StatusNotFound, gin.H{"Message": "No tasks found"})
 		return
 	}
 	c.JSON(http.StatusOK, tasks)
@@ -35,7 +35,7 @@ func (tc *TaskController) GetTask(c *gin.Context) {
 	id,_ := primitive.ObjectIDFromHex(c.Param("id"))
 	task, err := tc.TaskUsecase.GetTask(c, claims, id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"Message": "Task not found"})
+		c.JSON(http.StatusNotFound, gin.H{"Message": "Task not found"})
 		return
 	}
 	c.JSON(http.StatusOK, task)
@@ -61,12 +61,12 @@ func (tc *TaskController) AddTask(c *gin.Context) {
 		UserID:      userID,
 	}
 
-	err := tc.TaskUsecase.AddTask(c, claims, &adtask)
+	taskid,err := tc.TaskUsecase.AddTask(c, claims, &adtask)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Error adding the task"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "Task added successfully", "taskid": adtask.ID})
+	c.JSON(http.StatusCreated, gin.H{"message": "Task added successfully", "taskid": taskid})
 }
 
 func (tc *TaskController) UpdateTask(c *gin.Context) {

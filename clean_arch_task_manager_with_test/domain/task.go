@@ -35,7 +35,7 @@ type TaskRepository interface {
 }
 
 type TaskUsecase interface {
-	AddTask(c context.Context, claims *Claims, task *Task) error
+	AddTask(c context.Context, claims *Claims, task *Task) (primitive.ObjectID, error)
 	GetTasks(c context.Context, claims *Claims) ([]Task, error)
 	GetTask(c context.Context, claims *Claims, id primitive.ObjectID) (*Task, error)
 	UpdateTask(c context.Context, claims *Claims, id primitive.ObjectID, task *UpdateTask) error

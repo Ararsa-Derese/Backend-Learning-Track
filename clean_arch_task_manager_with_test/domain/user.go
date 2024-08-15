@@ -25,7 +25,7 @@ type UserRepository interface {
 	GetUserByID(id primitive.ObjectID) (*User, error)
 }
 type UserUsecase interface {
-	RegisterUser(user *User) error
-	LoginUser(user *User) (string, error)
+	RegisterUser(user *User) (primitive.ObjectID,error)
+	LoginUser(user *Login) (string, error)
 	GetUserByID(id primitive.ObjectID) (*User, error)
 }

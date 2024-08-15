@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserController struct {
@@ -15,26 +16,26 @@ type UserController struct {
 func (uc *UserController) Register(c *gin.Context) {
 	var user domain.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 	hashedPassword, err := infrastructure.Generatepassword(user.Password)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Error hashing the password"})
 		return
 	}
-
 	adduser := domain.User{
+		ID:       primitive.NewObjectID(),
 		Username: user.Username,
 		Password: string(hashedPassword),
 		Role:     user.Role,
 	}
-	err = uc.UserUsecase.RegisterUser(&adduser)
+	userid, err := uc.UserUsecase.RegisterUser(&adduser)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Error registering the user"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully", "userid": adduser.ID})
+	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "userid": userid})
 
 }
 
@@ -44,21 +45,11 @@ func (uc *UserController) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	result, err := uc.UserUsecase.GetUserByID(user.ID)
+	jwtToken, err := uc.UserUsecase.LoginUser(&user)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-	err = infrastructure.Checkpassword(result.Password, user.Password)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid login credentials"})
-		return
-	}
-	jwtToken, err := infrastructure.GenerateToken(result)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
 		return
 	}
 	c.Header("Authorization", jwtToken)
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful","userid":result.ID})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }

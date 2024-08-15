@@ -24,8 +24,8 @@ func (tu *TaskUsecase) GetTask(c context.Context, claims *domain.Claims, id prim
 	return tu.taskRepository.GetTask(c, claims, id)
 }
 
-func (tu *TaskUsecase) AddTask(c context.Context, claims *domain.Claims ,task *domain.Task) error {
-	return tu.taskRepository.AddTask(c,claims, task)
+func (tu *TaskUsecase) AddTask(c context.Context, claims *domain.Claims ,task *domain.Task) (primitive.ObjectID, error) {
+	return task.ID,tu.taskRepository.AddTask(c,claims, task)
 }
 
 func (tu *TaskUsecase) UpdateTask(c context.Context, claims *domain.Claims, id primitive.ObjectID, task *domain.UpdateTask) error {

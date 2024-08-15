@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserUsecaseSuite struct {
@@ -32,10 +34,19 @@ func (suite *UserUsecaseSuite) TestGetUserByID() {
 	assert.NotNil(suite.T(), result)
 }
 
+func (suite *UserUsecaseSuite) TestLoginUser() {
+	user:= domain.Login{ ID: primitive.NewObjectID(), Password: "123"}
+	suite.mockRepo.On("LoginUser",mock.AnythingOfType("*domain.Login")).Return("jtw_token",nil)
+	jwt,err := suite.usecase.LoginUser(&user)
+	suite.Nil(err)
+	suite.NotEmpty(jwt)
+
+}
+
 func (suite *UserUsecaseSuite) TestRegisterUser() {
 	user := domain.User{Username: "testuser", Password: "password"}
 	suite.mockRepo.On("RegisterUser", &user).Return(nil)
-	err := suite.usecase.RegisterUser(&user)
+	_,err := suite.usecase.RegisterUser(&user)
 	assert.NoError(suite.T(), err)
 	
 }

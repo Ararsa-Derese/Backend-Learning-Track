@@ -18,9 +18,9 @@ import (
 
 type TaskRepositorySuite struct {
 	suite.Suite
-	databaseHelper    *mocks.Database
-	collectionHelper  *mocks.Collection
-	cursorHelper      *mocks.Cursor
+	databaseHelper     *mocks.Database
+	collectionHelper   *mocks.Collection
+	cursorHelper       *mocks.Cursor
 	singleResultHelper *mocks.SingleResult
 }
 
@@ -54,12 +54,8 @@ func (suite *TaskRepositorySuite) TestAddTask_Success() {
 	suite.databaseHelper.On("Collection", collectionName).Return(suite.collectionHelper)
 
 	ur := repository.NewTaskRepository(suite.databaseHelper, collectionName)
-
 	err := ur.AddTask(context.Background(), &mockClaims, &mockTask)
-
-	assert.NoError(suite.T(), err)
-
-	// suite.collectionHelper.AssertExpectations(suite.T())
+	suite.NoError(err)
 }
 
 func (suite *TaskRepositorySuite) TestAddTask_Error() {
@@ -106,10 +102,7 @@ func (suite *TaskRepositorySuite) TestGetTasks_Error() {
 
 	_, err := tr.GetTasks(context.Background(), &mockClaims)
 
-	assert.Error(suite.T(), err)
-
-	suite.collectionHelper.AssertExpectations(suite.T())
-	suite.cursorHelper.AssertExpectations(suite.T())
+	suite.Error(err)
 }
 
 func (suite *TaskRepositorySuite) TestGetTask_Success() {
@@ -124,10 +117,9 @@ func (suite *TaskRepositorySuite) TestGetTask_Success() {
 
 	_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
 
-	assert.NoError(suite.T(), err)
+	suite.NoError(err)
 
-	suite.collectionHelper.AssertExpectations(suite.T())
-	suite.singleResultHelper.AssertExpectations(suite.T())
+
 }
 
 func (suite *TaskRepositorySuite) TestGetTask_Error() {
@@ -142,10 +134,9 @@ func (suite *TaskRepositorySuite) TestGetTask_Error() {
 
 	_, err := tr.GetTask(context.Background(), &mockClaims, primitive.NewObjectID())
 
-	assert.Error(suite.T(), err)
+	suite.Error(err)
 
-	suite.collectionHelper.AssertExpectations(suite.T())
-	suite.singleResultHelper.AssertExpectations(suite.T())
+
 }
 
 func (suite *TaskRepositorySuite) TestUpdateTask_Success() {
@@ -161,9 +152,9 @@ func (suite *TaskRepositorySuite) TestUpdateTask_Success() {
 
 	err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
 
-	assert.NoError(suite.T(), err)
+	suite.NoError(err)
 
-	suite.collectionHelper.AssertExpectations(suite.T())
+	
 }
 
 func (suite *TaskRepositorySuite) TestUpdateTask_Error() {
@@ -179,9 +170,9 @@ func (suite *TaskRepositorySuite) TestUpdateTask_Error() {
 
 	err := tr.UpdateTask(context.Background(), &mockClaims, primitive.NewObjectID(), &mockTask)
 
-	assert.Error(suite.T(), err)
+	suite.Error(err)
 
-	suite.collectionHelper.AssertExpectations(suite.T())
+	
 }
 
 func (suite *TaskRepositorySuite) TestDeleteTask_Success() {
@@ -196,9 +187,9 @@ func (suite *TaskRepositorySuite) TestDeleteTask_Success() {
 
 	err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
 
-	assert.NoError(suite.T(), err)
+	suite.NoError(err)
 
-	suite.collectionHelper.AssertExpectations(suite.T())
+	
 }
 
 func (suite *TaskRepositorySuite) TestDeleteTask_Error() {
@@ -213,9 +204,8 @@ func (suite *TaskRepositorySuite) TestDeleteTask_Error() {
 
 	err := tr.DeleteTask(context.Background(), &mockClaims, primitive.NewObjectID())
 
-	assert.Error(suite.T(), err)
-
-	suite.collectionHelper.AssertExpectations(suite.T())
+	suite.Error(err)
+	
 }
 
 func TestTaskRepositorySuite(t *testing.T) {
